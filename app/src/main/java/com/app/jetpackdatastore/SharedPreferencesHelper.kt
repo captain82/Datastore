@@ -1,6 +1,7 @@
 package com.app.jetpackdatastore
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.Preferences
@@ -20,7 +21,9 @@ import java.io.IOException
 private val Context._dataStore by preferencesDataStore(
     name = SharedPrefConstants.DATASTORE_NAME,
     produceMigrations = { context ->
-        listOf(SharedPreferencesMigration(context, SharedPrefConstants.PREFERENCES_NAME))
+        listOf(
+            SharedPreferencesMigration(context,
+                SharedPrefConstants.PREFERENCES_NAME))
     }
 )
 class SharedPreferencesHelper constructor(private val context: Context) {
@@ -50,9 +53,9 @@ class SharedPreferencesHelper constructor(private val context: Context) {
         return preferences.getString(SharedPrefConstants.ROLE,"") ?: ""
     }
 
-    var dataStoreName: String
+    var nameFromDataStore: String
         get() = runBlocking{
-            withContext(Dispatchers.Default){
+            withContext(Dispatchers.Default) {
                 dataStore.getValueFlow(stringPreferencesKey(SharedPrefConstants.NAME), "").first()
             }
         }
@@ -65,7 +68,7 @@ class SharedPreferencesHelper constructor(private val context: Context) {
             }
         }
 
-    var dataStoreRole: String
+    var roleFromDataStore: String
         get() = runBlocking{
             withContext(Dispatchers.Default) {
                 dataStore.getValueFlow(stringPreferencesKey(SharedPrefConstants.ROLE), "").first()
@@ -79,6 +82,17 @@ class SharedPreferencesHelper constructor(private val context: Context) {
                 }
             }
         }
+
+    suspend fun getNameFromDS(): String {
+        Log.i("PrefThread","${Thread.currentThread().name}")
+        return dataStore.getValueFlow(stringPreferencesKey(SharedPrefConstants.NAME),"").first()
+
+    }
+
+    suspend fun getRoleFromDS(): String {
+        return dataStore.getValueFlow(stringPreferencesKey(SharedPrefConstants.ROLE),"").first()
+
+    }
 
     fun <T> DataStore<Preferences>.getValueFlow(
         key: Preferences.Key<T>,
